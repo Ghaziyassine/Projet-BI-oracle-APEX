@@ -31,7 +31,22 @@ BEGIN
   VALUES (1, 'Casablanca', -7.6154715, 33.5577835, 1200, 'Casablanca-Setat');
   INSERT INTO region (REGION_ID, NOM, LONGITUDE, LATITUDE, NM_MISSION, REGION)
   VALUES (2, 'EL JADIDA', -8.5448643, 33.2335172, 20, 'DOUKALA-ABDA');
-
+  INSERT INTO region (REGION_ID, NOM, LONGITUDE, LATITUDE, NM_MISSION, REGION)
+  VALUES (3, 'Rabat',  -6.83255, 34.01325, 800, 'Rabat-Salé-Kénitra');
+  INSERT INTO region (REGION_ID, NOM, LONGITUDE, LATITUDE, NM_MISSION, REGION)
+  VALUES (4, 'Fes',  -5.00028, 34.03313, 1000, 'Fès-Meknès');
+  INSERT INTO region (REGION_ID, NOM, LONGITUDE, LATITUDE, NM_MISSION, REGION)
+  VALUES (5, 'Marrakech', -7.98108, 31.62947, 900, 'Marrakech-Safi');
+  INSERT INTO region (REGION_ID, NOM, LONGITUDE, LATITUDE, NM_MISSION, REGION)
+  VALUES (6, 'Tangier',  -5.79975, 35.76727,850, 'Tanger-Tétouan-Al Hoceïma');
+  INSERT INTO region (REGION_ID, NOM, LONGITUDE, LATITUDE, NM_MISSION, REGION)
+  VALUES (7, 'Meknes',  -5.54727,33.89352, 700, 'Fès-Meknès');
+  INSERT INTO region (REGION_ID, NOM, LONGITUDE, LATITUDE, NM_MISSION, REGION)
+  VALUES (8, 'Agadir',  -9.59815,30.42018, 600, 'Souss-Massa');
+  INSERT INTO region (REGION_ID, NOM, LONGITUDE, LATITUDE, NM_MISSION, REGION)
+  VALUES (9, 'Oujda',  -1.90858,34.68139, 650, 'Oriental');
+  INSERT INTO region (REGION_ID, NOM, LONGITUDE, LATITUDE, NM_MISSION, REGION)
+  VALUES (10, 'Kenitra',  -6.58020,34.26101, 600, 'Rabat-Salé-Kénitra');
   ----------------------------------------------------------------
   -- 3. Insert PALIER (unchanged)
   ----------------------------------------------------------------
@@ -83,6 +98,58 @@ BEGIN
       RETURNING PRESTATAIRE_ID INTO prestataire_ids(i);
     END;
   END LOOP;
+
+  
+  ----------------------------------------------------------------
+  -- 6. Insert EVALUATION (3 evaluations per prestataire)
+  ----------------------------------------------------------------
+  FOR i IN 1 .. NB_PRESTATAIRES LOOP
+    FOR j IN 1 .. 3 LOOP
+      DECLARE
+        v_date_evaluation DATE;
+        v_taux_respet_delais NUMBER;
+        v_taux_incident NUMBER;
+        v_taux_missionnement NUMBER;
+        v_taux_respect_coutmoy NUMBER;
+        v_taux_de_rectifation NUMBER;
+        v_score FLOAT;
+      BEGIN
+        -- Set evaluation date to July 1 of 2023, 2024, 2025
+        v_date_evaluation := CASE j
+                             WHEN 1 THEN TO_DATE('2023-07-01', 'YYYY-MM-DD')
+                             WHEN 2 THEN TO_DATE('2024-07-01', 'YYYY-MM-DD')
+                             WHEN 3 THEN TO_DATE('2025-07-01', 'YYYY-MM-DD')
+                           END;
+        -- Generate taux values in (0, 10) with 3 decimal places
+        v_taux_respet_delais := ROUND(DBMS_RANDOM.VALUE(70, 99.99), 3);
+        v_taux_incident := ROUND(DBMS_RANDOM.VALUE(1.1, 20.1), 3);
+        v_taux_missionnement := ROUND(DBMS_RANDOM.VALUE(50, 99.9), 3);
+        v_taux_respect_coutmoy := ROUND(DBMS_RANDOM.VALUE(80.1, 99.9), 3);
+        v_taux_de_rectifation := ROUND(DBMS_RANDOM.VALUE(1.1, 20.9), 3);
+        -- Calculate score as sum of taux values * 2
+        v_score := (0.3 * v_taux_respet_delais / 100 +
+            0.2 * (1 - v_taux_incident / 100) +
+            0.25 * v_taux_missionnement / 100 +
+            0.15 * v_taux_respect_coutmoy / 100 +
+            0.1 * (1 - v_taux_de_rectifation / 100)) * 100;
+        INSERT INTO EVALUATION 
+          (SCORE, PRESTATAIRE_ID, DATE_EVALUATION, TAUX_RESPET_DELAIS, NBR_MISSION_RETARD, 
+           TAUX_INCIDENT, TAUX_MISSIONNEMENT, TAUX_RESPECT_COUTMOY, TAUX_DE_RECTIFATION)
+        VALUES (
+          v_score,
+          prestataire_ids(i),
+          v_date_evaluation,
+          v_taux_respet_delais,
+          TRUNC(DBMS_RANDOM.VALUE(0, 11)),
+          v_taux_incident,
+          v_taux_missionnement,
+          v_taux_respect_coutmoy,
+          v_taux_de_rectifation
+        );
+      END;
+    END LOOP;
+  END LOOP;
+
 
   ----------------------------------------------------------------
   -- 5. Insert FORFAIT / GA / PN with sequential date assignments (unchanged)

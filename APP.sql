@@ -33,17 +33,17 @@ prompt APPLICATION 257004 - Evaluation des experts automobiles
 -- Application Export:
 --   Application:     257004
 --   Name:            Evaluation des experts automobiles
---   Date and Time:   09:00 Wednesday May 21, 2025
+--   Date and Time:   11:45 Thursday May 22, 2025
 --   Exported By:     GYASSINE241@GMAIL.COM
 --   Flashback:       0
 --   Export Type:     Application Export
---     Pages:                     34
---       Items:                   82
+--     Pages:                     36
+--       Items:                   87
 --       Validations:              2
---       Processes:               30
---       Regions:                114
---       Buttons:                 58
---       Dynamic Actions:         30
+--       Processes:               33
+--       Regions:                118
+--       Buttons:                 63
+--       Dynamic Actions:         32
 --     Shared Components:
 --       Logic:
 --         App Settings:           2
@@ -51,7 +51,7 @@ prompt APPLICATION 257004 - Evaluation des experts automobiles
 --       Navigation:
 --         Lists:                  9
 --         Breadcrumbs:            1
---           Entries:              7
+--           Entries:              8
 --       Security:
 --         Authentication:         1
 --         Authorization:          3
@@ -114,7 +114,7 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_value_01=>'Evaluation des experts automobiles'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>6
-,p_version_scn=>15626017617715
+,p_version_scn=>15626288429956
 ,p_print_server_type=>'INSTANCE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -165,7 +165,7 @@ wwv_flow_imp_shared.create_list(
  p_id=>wwv_flow_imp.id(79966112858765739155)
 ,p_name=>'Navigation Menu'
 ,p_list_status=>'PUBLIC'
-,p_version_scn=>15620195908472
+,p_version_scn=>15626054616572
 );
 wwv_flow_imp_shared.create_list_item(
  p_id=>wwv_flow_imp.id(79966134283124739184)
@@ -217,6 +217,15 @@ wwv_flow_imp_shared.create_list_item(
 ,p_list_item_icon=>'fa-database-chart'
 ,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
 ,p_list_item_current_for_pages=>'2'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(46691745290464605998)
+,p_list_item_display_sequence=>110
+,p_list_item_link_text=>'Incident'
+,p_list_item_link_target=>'f?p=&APP_ID.:7:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-table'
+,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
+,p_list_item_current_for_pages=>'7,9'
 );
 wwv_flow_imp_shared.create_list_item(
  p_id=>wwv_flow_imp.id(79966415790920741496)
@@ -1443,6 +1452,12 @@ wwv_flow_imp_shared.create_menu_option(
 ,p_short_name=>'Missions'
 ,p_link=>'f?p=&APP_ID.:2:&APP_SESSION.::&DEBUG.:::'
 ,p_page_id=>2
+);
+wwv_flow_imp_shared.create_menu_option(
+ p_id=>wwv_flow_imp.id(46691750077841606004)
+,p_short_name=>'Incident'
+,p_link=>'f?p=&APP_ID.:7:&APP_SESSION.::&DEBUG.:::'
+,p_page_id=>7
 );
 wwv_flow_imp_shared.create_menu_option(
  p_id=>wwv_flow_imp.id(60410318142798181256)
@@ -2706,21 +2721,27 @@ wwv_flow_imp_page.create_page_plug(
 ,p_include_in_reg_disp_sel_yn=>'Y'
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select PN_ID,',
-'       STATUS,',
-'       FRAUDE,',
-'       COUT_EXPERT,',
-'       DATE_PRISE_PHOTO,',
-'       DATE_PUBLICATION_RAPPORT,',
-'       REGION_ID,',
-'       MATRICULE,',
-'       DATE_MISSIONNEMENT,',
-'       DATE_CONFIRMATIONRDV,',
-'       DATE_VALIDATION_DEVIS,',
-'       DATE_PUB_DEVIS,',
-'       PALIER_ID,',
-'       PRESTATAIRE_ID',
-'  from PN',
+'select pn.PN_ID,',
+'         CASE ',
+'         WHEN pn.FRAUDE = 1 THEN ''OUI''',
+'         ELSE ''Non''',
+'            END AS FRAUDE, ',
+'         CASE ',
+unistr('         WHEN pn.STATUS = 1 THEN ''Termin\00E9e'''),
+'         ELSE ''En cours''',
+'            END AS statut,  ',
+'       pn.COUT_EXPERT,',
+'       pn.DATE_PRISE_PHOTO,',
+'       pn.DATE_PUBLICATION_RAPPORT,',
+'       r.nom as ville,',
+'       p.Matricule as PESTATAIRE_code,',
+'       pn.DATE_MISSIONNEMENT,',
+'       pn.DATE_CONFIRMATIONRDV,',
+'       pn.DATE_VALIDATION_DEVIS,',
+'       pn.DATE_PUB_DEVIS,',
+'       pn.PALIER_ID as PALIER',
+'  from PN pn left join REGION r on pn.REGION_ID=r.REGION_ID',
+'left join prestataire p on P.PRESTATAIRE_ID =P.PRESTATAIRE_ID',
 '   WHERE ( :P2_STARTDATE IS NULL OR DATE_PRISE_PHOTO >= :P2_STARTDATE )',
 '  AND ( :P2_ENDDATE IS NULL   OR DATE_PRISE_PHOTO <= :P2_ENDDATE );'))
 ,p_plug_source_type=>'NATIVE_IR'
@@ -2780,28 +2801,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(30805851163053472736)
-,p_db_column_name=>'STATUS'
-,p_display_order=>20
-,p_column_identifier=>'B'
-,p_column_label=>'Status'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(30805851279806472737)
-,p_db_column_name=>'FRAUDE'
-,p_display_order=>30
-,p_column_identifier=>'C'
-,p_column_label=>'Fraude'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(30805851391789472738)
 ,p_db_column_name=>'COUT_EXPERT'
 ,p_display_order=>40
@@ -2832,27 +2831,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_column_type=>'DATE'
 ,p_heading_alignment=>'LEFT'
 ,p_tz_dependent=>'N'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(30805851622429472741)
-,p_db_column_name=>'REGION_ID'
-,p_display_order=>70
-,p_column_identifier=>'G'
-,p_column_label=>'Region Id'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(30805851784060472742)
-,p_db_column_name=>'MATRICULE'
-,p_display_order=>80
-,p_column_identifier=>'H'
-,p_column_label=>'Matricule'
-,p_column_type=>'STRING'
-,p_heading_alignment=>'LEFT'
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
@@ -2900,22 +2878,51 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(30805852234339472747)
-,p_db_column_name=>'PALIER_ID'
-,p_display_order=>130
-,p_column_identifier=>'M'
-,p_column_label=>'Palier Id'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
+ p_id=>wwv_flow_imp.id(47130245444415160604)
+,p_db_column_name=>'FRAUDE'
+,p_display_order=>140
+,p_column_identifier=>'P'
+,p_column_label=>'Fraude'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(30805852435305472749)
-,p_db_column_name=>'PRESTATAIRE_ID'
+ p_id=>wwv_flow_imp.id(47130245584052160605)
+,p_db_column_name=>'STATUT'
 ,p_display_order=>150
-,p_column_identifier=>'O'
-,p_column_label=>'Prestataire Id'
+,p_column_identifier=>'Q'
+,p_column_label=>'Statut'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(47130245622566160606)
+,p_db_column_name=>'VILLE'
+,p_display_order=>160
+,p_column_identifier=>'R'
+,p_column_label=>'Ville'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(47130245720116160607)
+,p_db_column_name=>'PESTATAIRE_CODE'
+,p_display_order=>170
+,p_column_identifier=>'S'
+,p_column_label=>'Pestataire Code'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(47130245878657160608)
+,p_db_column_name=>'PALIER'
+,p_display_order=>180
+,p_column_identifier=>'T'
+,p_column_label=>'Palier'
 ,p_column_type=>'NUMBER'
 ,p_heading_alignment=>'RIGHT'
 ,p_column_alignment=>'RIGHT'
@@ -2928,7 +2935,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_report_alias=>'343437061'
 ,p_status=>'PUBLIC'
 ,p_is_default=>'Y'
-,p_report_columns=>'PN_ID:STATUS:FRAUDE:COUT_EXPERT:DATE_PRISE_PHOTO:DATE_PUBLICATION_RAPPORT:REGION_ID:MATRICULE:DATE_MISSIONNEMENT:DATE_CONFIRMATIONRDV:DATE_VALIDATION_DEVIS:DATE_PUB_DEVIS:PALIER_ID:PRESTATAIRE_ID'
+,p_report_columns=>'PN_ID:COUT_EXPERT:DATE_PRISE_PHOTO:DATE_PUBLICATION_RAPPORT:DATE_MISSIONNEMENT:DATE_CONFIRMATIONRDV:DATE_VALIDATION_DEVIS:DATE_PUB_DEVIS'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(34342511553090987681)
@@ -2951,20 +2958,26 @@ wwv_flow_imp_page.create_page_plug(
 ,p_include_in_reg_disp_sel_yn=>'Y'
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select FORFAIT_ID,',
-'       STATUS,',
-'       FRAUDE,',
-'       COUT_EXPERT,',
-'       DATE_PRISE_PHOTO,',
-'       DATE_VALIDATION_DEVIS,',
-'       DATE_PUB_DEVIS,',
-'       DATE_PUBLICATION_RAPPORT,',
-'       REGION_ID,',
-'       PESTATAIRE_MATRICULE,',
-'       DATE_MISSIONNEMENT,',
-'       DATE_CONFIRMATION_RDV,',
-'       PRESTATAIRE_ID',
-'  from FORFAIT',
+'select f.FORFAIT_ID,',
+'         CASE ',
+'         WHEN f.FRAUDE = 1 THEN ''OUI''',
+'         ELSE ''Non''',
+'        END AS FRAUDE, ',
+'        CASE ',
+unistr('         WHEN f.STATUS = 1 THEN ''Termin\00E9e'''),
+'         ELSE ''En cours''',
+'        END AS statut,  ',
+'       f.COUT_EXPERT,',
+'       f.DATE_PRISE_PHOTO,',
+'       f.DATE_VALIDATION_DEVIS,',
+'       f.DATE_PUB_DEVIS,',
+'       f.DATE_PUBLICATION_RAPPORT,',
+'       r.nom as ville,',
+'       p.Matricule as PESTATAIRE_code,',
+'       f.DATE_MISSIONNEMENT,',
+'       f.DATE_CONFIRMATION_RDV',
+'from FORFAIT f left join REGION r on f.REGION_ID=r.REGION_ID',
+'left join prestataire p on P.PRESTATAIRE_ID =P.PRESTATAIRE_ID',
 '   WHERE ( :P2_STARTDATE IS NULL OR DATE_PRISE_PHOTO >= :P2_STARTDATE )',
 '  AND ( :P2_ENDDATE IS NULL   OR DATE_PRISE_PHOTO <= :P2_ENDDATE )'))
 ,p_plug_source_type=>'NATIVE_IG'
@@ -2989,41 +3002,11 @@ wwv_flow_imp_page.create_region_column(
 ,p_include_in_export=>false
 );
 wwv_flow_imp_page.create_region_column(
- p_id=>wwv_flow_imp.id(34342514828686987690)
-,p_name=>'STATUS'
-,p_source_type=>'DB_COLUMN'
-,p_source_expression=>'STATUS'
-,p_data_type=>'NUMBER'
-,p_session_state_data_type=>'VARCHAR2'
-,p_is_query_only=>false
-,p_item_type=>'NATIVE_NUMBER_FIELD'
-,p_heading=>'Status'
-,p_heading_alignment=>'RIGHT'
-,p_display_sequence=>20
-,p_value_alignment=>'RIGHT'
-,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
-  'number_alignment', 'left',
-  'virtual_keyboard', 'decimal')).to_clob
-,p_is_required=>false
-,p_enable_filter=>true
-,p_filter_is_required=>false
-,p_filter_lov_type=>'NONE'
-,p_use_as_row_header=>false
-,p_enable_sort_group=>true
-,p_enable_control_break=>true
-,p_enable_hide=>true
-,p_enable_pivot=>false
-,p_is_primary_key=>false
-,p_duplicate_value=>true
-,p_include_in_export=>true
-);
-wwv_flow_imp_page.create_region_column(
  p_id=>wwv_flow_imp.id(34342515812353987690)
 ,p_name=>'FRAUDE'
 ,p_source_type=>'DB_COLUMN'
 ,p_source_expression=>'FRAUDE'
-,p_data_type=>'NUMBER'
-,p_session_state_data_type=>'VARCHAR2'
+,p_data_type=>'VARCHAR2'
 ,p_is_query_only=>false
 ,p_item_type=>'NATIVE_NUMBER_FIELD'
 ,p_heading=>'Fraude'
@@ -3035,7 +3018,9 @@ wwv_flow_imp_page.create_region_column(
   'virtual_keyboard', 'decimal')).to_clob
 ,p_is_required=>false
 ,p_enable_filter=>true
+,p_filter_operators=>'C:S:CASE_INSENSITIVE:REGEXP'
 ,p_filter_is_required=>false
+,p_filter_text_case=>'MIXED'
 ,p_filter_lov_type=>'NONE'
 ,p_use_as_row_header=>false
 ,p_enable_sort_group=>true
@@ -3150,74 +3135,6 @@ wwv_flow_imp_page.create_region_column(
 ,p_include_in_export=>true
 );
 wwv_flow_imp_page.create_region_column(
- p_id=>wwv_flow_imp.id(34342519911064987694)
-,p_name=>'REGION_ID'
-,p_source_type=>'DB_COLUMN'
-,p_source_expression=>'REGION_ID'
-,p_data_type=>'NUMBER'
-,p_session_state_data_type=>'VARCHAR2'
-,p_is_query_only=>false
-,p_item_type=>'NATIVE_SELECT_LIST'
-,p_heading=>'Region Id'
-,p_heading_alignment=>'LEFT'
-,p_display_sequence=>70
-,p_value_alignment=>'LEFT'
-,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
-  'execute_validations', 'Y',
-  'page_action_on_selection', 'NONE')).to_clob
-,p_is_required=>false
-,p_lov_type=>'SHARED'
-,p_lov_id=>wwv_flow_imp.id(79966138704820739333)
-,p_enable_filter=>true
-,p_filter_operators=>'C:S:CASE_INSENSITIVE:REGEXP'
-,p_filter_is_required=>false
-,p_filter_lov_type=>'NONE'
-,p_use_as_row_header=>false
-,p_enable_sort_group=>true
-,p_enable_control_break=>true
-,p_enable_hide=>true
-,p_enable_pivot=>false
-,p_is_primary_key=>false
-,p_duplicate_value=>true
-,p_include_in_export=>true
-);
-wwv_flow_imp_page.create_region_column(
- p_id=>wwv_flow_imp.id(34342521035610987695)
-,p_name=>'PESTATAIRE_MATRICULE'
-,p_source_type=>'DB_COLUMN'
-,p_source_expression=>'PESTATAIRE_MATRICULE'
-,p_data_type=>'VARCHAR2'
-,p_session_state_data_type=>'VARCHAR2'
-,p_is_query_only=>false
-,p_item_type=>'NATIVE_TEXT_FIELD'
-,p_heading=>'Pestataire Matricule'
-,p_heading_alignment=>'LEFT'
-,p_display_sequence=>80
-,p_value_alignment=>'LEFT'
-,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
-  'disabled', 'N',
-  'send_on_page_submit', 'N',
-  'submit_when_enter_pressed', 'N',
-  'subtype', 'TEXT',
-  'trim_spaces', 'BOTH')).to_clob
-,p_is_required=>false
-,p_max_length=>100
-,p_enable_filter=>true
-,p_filter_operators=>'C:S:CASE_INSENSITIVE:REGEXP'
-,p_filter_is_required=>false
-,p_filter_text_case=>'MIXED'
-,p_filter_exact_match=>true
-,p_filter_lov_type=>'DISTINCT'
-,p_use_as_row_header=>false
-,p_enable_sort_group=>true
-,p_enable_control_break=>true
-,p_enable_hide=>true
-,p_enable_pivot=>false
-,p_is_primary_key=>false
-,p_duplicate_value=>true
-,p_include_in_export=>true
-);
-wwv_flow_imp_page.create_region_column(
  p_id=>wwv_flow_imp.id(34342522029121987696)
 ,p_name=>'DATE_MISSIONNEMENT'
 ,p_source_type=>'DB_COLUMN'
@@ -3292,38 +3209,6 @@ wwv_flow_imp_page.create_region_column(
 ,p_include_in_export=>true
 );
 wwv_flow_imp_page.create_region_column(
- p_id=>wwv_flow_imp.id(34342525407241987713)
-,p_name=>'PRESTATAIRE_ID'
-,p_source_type=>'DB_COLUMN'
-,p_source_expression=>'PRESTATAIRE_ID'
-,p_data_type=>'NUMBER'
-,p_session_state_data_type=>'VARCHAR2'
-,p_is_query_only=>false
-,p_item_type=>'NATIVE_SELECT_LIST'
-,p_heading=>'Prestataire Id'
-,p_heading_alignment=>'LEFT'
-,p_display_sequence=>120
-,p_value_alignment=>'LEFT'
-,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
-  'execute_validations', 'Y',
-  'page_action_on_selection', 'NONE')).to_clob
-,p_is_required=>false
-,p_lov_type=>'SHARED'
-,p_lov_id=>wwv_flow_imp.id(79966181887509739872)
-,p_enable_filter=>true
-,p_filter_operators=>'C:S:CASE_INSENSITIVE:REGEXP'
-,p_filter_is_required=>false
-,p_filter_lov_type=>'NONE'
-,p_use_as_row_header=>false
-,p_enable_sort_group=>true
-,p_enable_control_break=>true
-,p_enable_hide=>true
-,p_enable_pivot=>false
-,p_is_primary_key=>false
-,p_duplicate_value=>true
-,p_include_in_export=>true
-);
-wwv_flow_imp_page.create_region_column(
  p_id=>wwv_flow_imp.id(43021136247832901301)
 ,p_name=>'DATE_VALIDATION_DEVIS'
 ,p_source_type=>'DB_COLUMN'
@@ -3387,6 +3272,98 @@ wwv_flow_imp_page.create_region_column(
 ,p_duplicate_value=>true
 ,p_include_in_export=>true
 );
+wwv_flow_imp_page.create_region_column(
+ p_id=>wwv_flow_imp.id(47130245120051160601)
+,p_name=>'STATUT'
+,p_source_type=>'DB_COLUMN'
+,p_source_expression=>'STATUT'
+,p_data_type=>'VARCHAR2'
+,p_is_query_only=>false
+,p_item_type=>'NATIVE_TEXT_FIELD'
+,p_heading=>'Statut'
+,p_heading_alignment=>'LEFT'
+,p_display_sequence=>150
+,p_value_alignment=>'LEFT'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'trim_spaces', 'BOTH')).to_clob
+,p_is_required=>false
+,p_max_length=>9
+,p_enable_filter=>true
+,p_filter_operators=>'C:S:CASE_INSENSITIVE:REGEXP'
+,p_filter_is_required=>false
+,p_filter_text_case=>'MIXED'
+,p_filter_exact_match=>true
+,p_filter_lov_type=>'DISTINCT'
+,p_use_as_row_header=>false
+,p_enable_sort_group=>true
+,p_enable_control_break=>true
+,p_enable_hide=>true
+,p_is_primary_key=>false
+,p_duplicate_value=>true
+,p_include_in_export=>true
+);
+wwv_flow_imp_page.create_region_column(
+ p_id=>wwv_flow_imp.id(47130245240580160602)
+,p_name=>'VILLE'
+,p_source_type=>'DB_COLUMN'
+,p_source_expression=>'VILLE'
+,p_data_type=>'VARCHAR2'
+,p_is_query_only=>false
+,p_item_type=>'NATIVE_TEXT_FIELD'
+,p_heading=>'Ville'
+,p_heading_alignment=>'LEFT'
+,p_display_sequence=>160
+,p_value_alignment=>'LEFT'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'trim_spaces', 'BOTH')).to_clob
+,p_is_required=>false
+,p_max_length=>200
+,p_enable_filter=>true
+,p_filter_operators=>'C:S:CASE_INSENSITIVE:REGEXP'
+,p_filter_is_required=>false
+,p_filter_text_case=>'MIXED'
+,p_filter_exact_match=>true
+,p_filter_lov_type=>'DISTINCT'
+,p_use_as_row_header=>false
+,p_enable_sort_group=>true
+,p_enable_control_break=>true
+,p_enable_hide=>true
+,p_is_primary_key=>false
+,p_duplicate_value=>true
+,p_include_in_export=>true
+);
+wwv_flow_imp_page.create_region_column(
+ p_id=>wwv_flow_imp.id(47130245322151160603)
+,p_name=>'PESTATAIRE_CODE'
+,p_source_type=>'DB_COLUMN'
+,p_source_expression=>'PESTATAIRE_CODE'
+,p_data_type=>'VARCHAR2'
+,p_session_state_data_type=>'VARCHAR2'
+,p_is_query_only=>false
+,p_item_type=>'NATIVE_TEXTAREA'
+,p_heading=>'Pestataire Code'
+,p_heading_alignment=>'LEFT'
+,p_display_sequence=>170
+,p_value_alignment=>'LEFT'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'auto_height', 'N',
+  'character_counter', 'N',
+  'resizable', 'Y',
+  'trim_spaces', 'BOTH')).to_clob
+,p_is_required=>false
+,p_max_length=>1000
+,p_enable_filter=>true
+,p_filter_operators=>'C:S:CASE_INSENSITIVE:REGEXP'
+,p_filter_is_required=>false
+,p_filter_text_case=>'MIXED'
+,p_filter_lov_type=>'NONE'
+,p_use_as_row_header=>false
+,p_enable_sort_group=>false
+,p_enable_hide=>true
+,p_is_primary_key=>false
+,p_duplicate_value=>true
+,p_include_in_export=>true
+);
 wwv_flow_imp_page.create_interactive_grid(
  p_id=>wwv_flow_imp.id(34342512993165987685)
 ,p_internal_uid=>34342512993165987685
@@ -3434,14 +3411,6 @@ wwv_flow_imp_page.create_ig_report_column(
 ,p_is_frozen=>false
 );
 wwv_flow_imp_page.create_ig_report_column(
- p_id=>wwv_flow_imp.id(34342515284319987690)
-,p_view_id=>wwv_flow_imp.id(34342513585809987686)
-,p_display_seq=>2
-,p_column_id=>wwv_flow_imp.id(34342514828686987690)
-,p_is_visible=>true
-,p_is_frozen=>false
-);
-wwv_flow_imp_page.create_ig_report_column(
  p_id=>wwv_flow_imp.id(34342516210795987691)
 ,p_view_id=>wwv_flow_imp.id(34342513585809987686)
 ,p_display_seq=>3
@@ -3474,22 +3443,6 @@ wwv_flow_imp_page.create_ig_report_column(
 ,p_is_frozen=>false
 );
 wwv_flow_imp_page.create_ig_report_column(
- p_id=>wwv_flow_imp.id(34342520391354987694)
-,p_view_id=>wwv_flow_imp.id(34342513585809987686)
-,p_display_seq=>7
-,p_column_id=>wwv_flow_imp.id(34342519911064987694)
-,p_is_visible=>true
-,p_is_frozen=>false
-);
-wwv_flow_imp_page.create_ig_report_column(
- p_id=>wwv_flow_imp.id(34342521415804987695)
-,p_view_id=>wwv_flow_imp.id(34342513585809987686)
-,p_display_seq=>8
-,p_column_id=>wwv_flow_imp.id(34342521035610987695)
-,p_is_visible=>true
-,p_is_frozen=>false
-);
-wwv_flow_imp_page.create_ig_report_column(
  p_id=>wwv_flow_imp.id(34342522430874987696)
 ,p_view_id=>wwv_flow_imp.id(34342513585809987686)
 ,p_display_seq=>9
@@ -3502,14 +3455,6 @@ wwv_flow_imp_page.create_ig_report_column(
 ,p_view_id=>wwv_flow_imp.id(34342513585809987686)
 ,p_display_seq=>10
 ,p_column_id=>wwv_flow_imp.id(34342523039256987697)
-,p_is_visible=>true
-,p_is_frozen=>false
-);
-wwv_flow_imp_page.create_ig_report_column(
- p_id=>wwv_flow_imp.id(34342525867964987714)
-,p_view_id=>wwv_flow_imp.id(34342513585809987686)
-,p_display_seq=>12
-,p_column_id=>wwv_flow_imp.id(34342525407241987713)
 ,p_is_visible=>true
 ,p_is_frozen=>false
 );
@@ -3529,6 +3474,30 @@ wwv_flow_imp_page.create_ig_report_column(
 ,p_is_visible=>true
 ,p_is_frozen=>false
 );
+wwv_flow_imp_page.create_ig_report_column(
+ p_id=>wwv_flow_imp.id(47130263451238160808)
+,p_view_id=>wwv_flow_imp.id(34342513585809987686)
+,p_display_seq=>17
+,p_column_id=>wwv_flow_imp.id(47130245120051160601)
+,p_is_visible=>true
+,p_is_frozen=>false
+);
+wwv_flow_imp_page.create_ig_report_column(
+ p_id=>wwv_flow_imp.id(47130264397079160811)
+,p_view_id=>wwv_flow_imp.id(34342513585809987686)
+,p_display_seq=>18
+,p_column_id=>wwv_flow_imp.id(47130245240580160602)
+,p_is_visible=>true
+,p_is_frozen=>false
+);
+wwv_flow_imp_page.create_ig_report_column(
+ p_id=>wwv_flow_imp.id(47130265386398160814)
+,p_view_id=>wwv_flow_imp.id(34342513585809987686)
+,p_display_seq=>19
+,p_column_id=>wwv_flow_imp.id(47130245322151160603)
+,p_is_visible=>true
+,p_is_frozen=>false
+);
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(34343471733987270002)
 ,p_plug_name=>unistr('Garage Agre\00E9')
@@ -3539,20 +3508,26 @@ wwv_flow_imp_page.create_page_plug(
 ,p_include_in_reg_disp_sel_yn=>'Y'
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select GA_ID,',
-'       STATUS,',
-'       FRAUDE,',
-'       COUT_EXPERT,',
-'       DATE_PRISE_PHOTO,',
-'       DATE_PUBLICATION_RAPPORT,',
-'       REGION_ID,',
-'       MATRICULE,',
-'       DATE_PUB_FACTURE,',
-'       DATE_VALIDATION_DEVIS,',
-'       DATE_PUB_DEVIS,',
-'       DATE_IMMOBILISATION,',
-'       PRESTATAIRE_ID',
-'  from GA',
+'select g.GA_ID,',
+'         CASE ',
+'         WHEN g.FRAUDE = 1 THEN ''OUI''',
+'         ELSE ''Non''',
+'    END AS FRAUDE, ',
+'    CASE ',
+unistr('         WHEN g.STATUS = 1 THEN ''Termin\00E9e'''),
+'         ELSE ''En cours''',
+'    END AS statut,  ',
+'        g.COUT_EXPERT,',
+'       g.DATE_PRISE_PHOTO,',
+'       g.DATE_PUBLICATION_RAPPORT,',
+'       g.DATE_PUB_FACTURE,',
+'       g.DATE_VALIDATION_DEVIS,',
+'       g.DATE_PUB_DEVIS,',
+'       g.DATE_IMMOBILISATION,',
+'       r.nom as ville,',
+'       p.Matricule as PESTATAIRE_code  ',
+' from GA g left join REGION r on g.REGION_ID=r.REGION_ID',
+'left join prestataire p on P.PRESTATAIRE_ID =P.PRESTATAIRE_ID',
 '   WHERE ( :P2_STARTDATE IS NULL OR DATE_PRISE_PHOTO >= :P2_STARTDATE )',
 '  AND ( :P2_ENDDATE IS NULL   OR DATE_PRISE_PHOTO <= :P2_ENDDATE );'))
 ,p_plug_source_type=>'NATIVE_IR'
@@ -3612,28 +3587,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(34343472004164270005)
-,p_db_column_name=>'STATUS'
-,p_display_order=>20
-,p_column_identifier=>'B'
-,p_column_label=>'Status'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(34343472166816270006)
-,p_db_column_name=>'FRAUDE'
-,p_display_order=>30
-,p_column_identifier=>'C'
-,p_column_label=>'Fraude'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(34343472237451270007)
 ,p_db_column_name=>'COUT_EXPERT'
 ,p_display_order=>40
@@ -3664,27 +3617,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_column_type=>'DATE'
 ,p_heading_alignment=>'LEFT'
 ,p_tz_dependent=>'N'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(34343472596356270010)
-,p_db_column_name=>'REGION_ID'
-,p_display_order=>70
-,p_column_identifier=>'G'
-,p_column_label=>'Region Id'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(34343472625127270011)
-,p_db_column_name=>'MATRICULE'
-,p_display_order=>80
-,p_column_identifier=>'H'
-,p_column_label=>'Matricule'
-,p_column_type=>'STRING'
-,p_heading_alignment=>'LEFT'
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
@@ -3721,17 +3653,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(34343473220008270017)
-,p_db_column_name=>'PRESTATAIRE_ID'
-,p_display_order=>140
-,p_column_identifier=>'N'
-,p_column_label=>'Prestataire Id'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(43021136458317901303)
 ,p_db_column_name=>'DATE_PUB_DEVIS'
 ,p_display_order=>150
@@ -3742,6 +3663,46 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_tz_dependent=>'N'
 ,p_use_as_row_header=>'N'
 );
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(47130245930310160609)
+,p_db_column_name=>'FRAUDE'
+,p_display_order=>160
+,p_column_identifier=>'R'
+,p_column_label=>'Fraude'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(47130246072244160610)
+,p_db_column_name=>'STATUT'
+,p_display_order=>170
+,p_column_identifier=>'S'
+,p_column_label=>'Statut'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(47130246162438160611)
+,p_db_column_name=>'VILLE'
+,p_display_order=>180
+,p_column_identifier=>'T'
+,p_column_label=>'Ville'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(47130246260809160612)
+,p_db_column_name=>'PESTATAIRE_CODE'
+,p_display_order=>190
+,p_column_identifier=>'U'
+,p_column_label=>'Pestataire Code'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
 wwv_flow_imp_page.create_worksheet_rpt(
  p_id=>wwv_flow_imp.id(34351273096009362083)
 ,p_application_user=>'APXWS_DEFAULT'
@@ -3749,7 +3710,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_report_alias=>'343512731'
 ,p_status=>'PUBLIC'
 ,p_is_default=>'Y'
-,p_report_columns=>'GA_ID:STATUS:FRAUDE:COUT_EXPERT:DATE_PRISE_PHOTO:DATE_PUBLICATION_RAPPORT:REGION_ID:MATRICULE:DATE_PUB_FACTURE:DATE_VALIDATION_DEVIS:DATE_IMMOBILISATION:PRESTATAIRE_ID'
+,p_report_columns=>'GA_ID:COUT_EXPERT:DATE_PRISE_PHOTO:DATE_PUBLICATION_RAPPORT:DATE_PUB_FACTURE:DATE_VALIDATION_DEVIS:DATE_IMMOBILISATION'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(34343473531640270020)
@@ -3762,15 +3723,22 @@ wwv_flow_imp_page.create_page_plug(
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'SELECT ',
-'    MISSION_ID,',
-'    MISSION_TYPE,',
-'    PRESTATAIRE_ID,',
-'    REGION_ID,',
-'    STATUS,',
-'    FRAUDE,',
-'    COUT_EXPERT,',
+'    m.MISSION_ID,',
+'    m.MISSION_TYPE,',
+'    p.Matricule as "PRESTATAIRE",',
+'    r.nom as "Region",',
+'    CASE ',
+'         WHEN m.FRAUDE = 1 THEN ''OUI''',
+'         ELSE ''Non''',
+'    END AS FRAUDE, ',
+'    CASE ',
+unistr('         WHEN m.STATUS = 1 THEN ''Termin\00E9e'''),
+'         ELSE ''En cours''',
+'    END AS statut,  ',
+'       m.COUT_EXPERT,',
 '    apex_page.get_url(p_page => 8, p_items => ''P8_MISSION_ID'', p_values => UNIQUE_MISSION_ID) AS DETAIL_LINK',
-'FROM MISSION',
+'FROM MISSION m left join PRESTATAIRE p on p.PRESTATAIRE_ID = m.PRESTATAIRE_ID',
+'  left join region r on r.region_id  =  m.region_id',
 ''))
 ,p_plug_source_type=>'NATIVE_IR'
 ,p_ajax_items_to_submit=>'P2_STARTDATE,P2_ENDDATE'
@@ -3839,50 +3807,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(34343473915119270024)
-,p_db_column_name=>'PRESTATAIRE_ID'
-,p_display_order=>30
-,p_column_identifier=>'C'
-,p_column_label=>'Prestataire Id'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(34343474030835270025)
-,p_db_column_name=>'REGION_ID'
-,p_display_order=>40
-,p_column_identifier=>'D'
-,p_column_label=>'Region Id'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(34343474177980270026)
-,p_db_column_name=>'STATUS'
-,p_display_order=>50
-,p_column_identifier=>'E'
-,p_column_label=>'Status'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(34343474233082270027)
-,p_db_column_name=>'FRAUDE'
-,p_display_order=>60
-,p_column_identifier=>'F'
-,p_column_label=>'Fraude'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(34343474324961270028)
 ,p_db_column_name=>'COUT_EXPERT'
 ,p_display_order=>70
@@ -3906,6 +3830,46 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_heading_alignment=>'LEFT'
 ,p_use_as_row_header=>'N'
 );
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621937091798375531)
+,p_db_column_name=>'PRESTATAIRE'
+,p_display_order=>90
+,p_column_identifier=>'R'
+,p_column_label=>'Prestataire'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621937108838375532)
+,p_db_column_name=>'Region'
+,p_display_order=>100
+,p_column_identifier=>'S'
+,p_column_label=>'Region'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621937291108375533)
+,p_db_column_name=>'STATUT'
+,p_display_order=>110
+,p_column_identifier=>'T'
+,p_column_label=>'Statut'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621937358762375534)
+,p_db_column_name=>'FRAUDE'
+,p_display_order=>120
+,p_column_identifier=>'U'
+,p_column_label=>'Fraude'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
 wwv_flow_imp_page.create_worksheet_rpt(
  p_id=>wwv_flow_imp.id(34351271754473362044)
 ,p_application_user=>'APXWS_DEFAULT'
@@ -3913,7 +3877,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_report_alias=>'343512718'
 ,p_status=>'PUBLIC'
 ,p_is_default=>'Y'
-,p_report_columns=>'MISSION_ID:MISSION_TYPE:PRESTATAIRE_ID:REGION_ID:STATUS:FRAUDE:COUT_EXPERT'
+,p_report_columns=>'MISSION_ID:MISSION_TYPE:COUT_EXPERT'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(34343474581339270030)
@@ -4655,15 +4619,15 @@ wwv_flow_imp_page.create_page_plug(
 ,p_plug_display_sequence=>10
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select EVALUATION_ID,',
-'       SCORE,',
-'       PRESTATAIRE_ID,',
-'       DATE_EVALUATION,',
-'       TAUX_RESPET_DELAIS,',
-'       TAUX_INCIDENT,',
-'       TAUX_MISSIONNEMENT,',
-'       TAUX_RESPECT_COUTMOY',
-'  from EVALUATION'))
+'select e.EVALUATION_ID,',
+'       e.SCORE,',
+'       p.matricule as Prestataire,',
+'       e.DATE_EVALUATION,',
+'       e.TAUX_RESPET_DELAIS,',
+'       e.TAUX_INCIDENT,',
+'       e.TAUX_MISSIONNEMENT,',
+'       e.TAUX_RESPECT_COUTMOY',
+'  from EVALUATION e join prestataire p on e.PRESTATAIRE_ID=p.PRESTATAIRE_ID'))
 ,p_plug_source_type=>'NATIVE_IR'
 ,p_prn_content_disposition=>'ATTACHMENT'
 ,p_prn_units=>'INCHES'
@@ -4731,17 +4695,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(62042034538100420524)
-,p_db_column_name=>'PRESTATAIRE_ID'
-,p_display_order=>30
-,p_column_identifier=>'C'
-,p_column_label=>'Prestataire Id'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(62042034711200420525)
 ,p_db_column_name=>'DATE_EVALUATION'
 ,p_display_order=>40
@@ -4796,6 +4749,16 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_column_alignment=>'RIGHT'
 ,p_use_as_row_header=>'N'
 );
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621937581842375536)
+,p_db_column_name=>'PRESTATAIRE'
+,p_display_order=>100
+,p_column_identifier=>'K'
+,p_column_label=>'Prestataire'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
 wwv_flow_imp_page.create_worksheet_rpt(
  p_id=>wwv_flow_imp.id(62041674831404151782)
 ,p_application_user=>'APXWS_DEFAULT'
@@ -4803,7 +4766,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_report_alias=>'308054885'
 ,p_status=>'PUBLIC'
 ,p_is_default=>'Y'
-,p_report_columns=>'EVALUATION_ID:SCORE:PRESTATAIRE_ID:DATE_EVALUATION:TAUX_RESPET_DELAIS:TAUX_INCIDENT:TAUX_MISSIONNEMENT:TAUX_RESPECT_COUTMOY'
+,p_report_columns=>'EVALUATION_ID:SCORE:DATE_EVALUATION:TAUX_RESPET_DELAIS:TAUX_INCIDENT:TAUX_MISSIONNEMENT:TAUX_RESPECT_COUTMOY'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(79966191086439739881)
@@ -5206,6 +5169,190 @@ wwv_flow_imp_page.create_page_process(
 );
 end;
 /
+prompt --application/pages/page_00007
+begin
+wwv_flow_imp_page.create_page(
+ p_id=>7
+,p_name=>'Incident'
+,p_alias=>'INCIDENT'
+,p_step_title=>'Incident'
+,p_autocomplete_on_off=>'OFF'
+,p_page_template_options=>'#DEFAULT#'
+,p_protection_level=>'C'
+,p_page_component_map=>'18'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(46691745677508605999)
+,p_plug_name=>'Incident'
+,p_region_template_options=>'#DEFAULT#:t-IRR-region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>2100526641005906379
+,p_plug_display_sequence=>10
+,p_query_type=>'SQL'
+,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select i.INCIDENT_ID,',
+'       i.GRAVITE,',
+'       i.DESCRIPTION,',
+'       i.DATE_INCIDENT,',
+'       p.PRESTATAIRE_ID,',
+'       p.nom,',
+'       p.prenom',
+'  from INCIDENT i  join prestataire p on p.PRESTATAIRE_ID=i.PRESTATAIRE_ID'))
+,p_plug_source_type=>'NATIVE_IR'
+,p_prn_page_header=>'Incident'
+);
+wwv_flow_imp_page.create_worksheet(
+ p_id=>wwv_flow_imp.id(46691745774002605999)
+,p_name=>'Incident'
+,p_max_row_count_message=>'The maximum row count for this report is #MAX_ROW_COUNT# rows.  Please apply a filter to reduce the number of records in your query.'
+,p_no_data_found_message=>'No data found.'
+,p_base_pk1=>'INCIDENT_ID'
+,p_base_pk2=>'PRESTATAIRE_ID'
+,p_pagination_type=>'ROWS_X_TO_Y'
+,p_pagination_display_pos=>'BOTTOM_RIGHT'
+,p_report_list_mode=>'TABS'
+,p_lazy_loading=>false
+,p_show_detail_link=>'C'
+,p_show_notify=>'Y'
+,p_download_formats=>'CSV:HTML:XLSX:PDF'
+,p_enable_mail_download=>'Y'
+,p_detail_link=>'f?p=&APP_ID.:9:&APP_SESSION.::&DEBUG.:RP:P9_INCIDENT_ID,P9_PRESTATAIRE_ID:\#INCIDENT_ID#\,\#PRESTATAIRE_ID#\'
+,p_detail_link_text=>'<span role="img" aria-label="Edit" class="fa fa-edit" title="Edit"></span>'
+,p_owner=>'GYASSINE241@GMAIL.COM'
+,p_internal_uid=>46691745774002605999
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(46691746450618606000)
+,p_db_column_name=>'INCIDENT_ID'
+,p_display_order=>0
+,p_is_primary_key=>'Y'
+,p_column_identifier=>'A'
+,p_column_label=>'Incident ID'
+,p_column_type=>'NUMBER'
+,p_display_text_as=>'HIDDEN_ESCAPE_SC'
+,p_heading_alignment=>'LEFT'
+,p_tz_dependent=>'N'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(46691748057404606002)
+,p_db_column_name=>'PRESTATAIRE_ID'
+,p_display_order=>0
+,p_is_primary_key=>'Y'
+,p_column_identifier=>'E'
+,p_column_label=>'Prestataire'
+,p_column_type=>'NUMBER'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(46691746801558606001)
+,p_db_column_name=>'GRAVITE'
+,p_display_order=>2
+,p_column_identifier=>'B'
+,p_column_label=>'Gravite'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_tz_dependent=>'N'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(46691747239245606001)
+,p_db_column_name=>'DESCRIPTION'
+,p_display_order=>3
+,p_column_identifier=>'C'
+,p_column_label=>'Description'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_tz_dependent=>'N'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(46691747695916606002)
+,p_db_column_name=>'DATE_INCIDENT'
+,p_display_order=>4
+,p_column_identifier=>'D'
+,p_column_label=>'Date Incident'
+,p_column_type=>'DATE'
+,p_heading_alignment=>'LEFT'
+,p_tz_dependent=>'N'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621936314358375524)
+,p_db_column_name=>'NOM'
+,p_display_order=>14
+,p_column_identifier=>'F'
+,p_column_label=>'Nom'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621936448572375525)
+,p_db_column_name=>'PRENOM'
+,p_display_order=>24
+,p_column_identifier=>'G'
+,p_column_label=>'Prenom'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_rpt(
+ p_id=>wwv_flow_imp.id(46691841728877881524)
+,p_application_user=>'APXWS_DEFAULT'
+,p_report_seq=>10
+,p_report_alias=>'466918418'
+,p_status=>'PUBLIC'
+,p_is_default=>'Y'
+,p_report_columns=>'INCIDENT_ID:PRESTATAIRE_ID:GRAVITE:DESCRIPTION:DATE_INCIDENT'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(46691750117987606004)
+,p_plug_name=>'Breadcrumb'
+,p_region_template_options=>'#DEFAULT#:t-BreadcrumbRegion--useBreadcrumbTitle'
+,p_component_template_options=>'#DEFAULT#'
+,p_plug_template=>2531463326621247859
+,p_plug_display_sequence=>10
+,p_plug_display_point=>'REGION_POSITION_01'
+,p_menu_id=>wwv_flow_imp.id(79966112318149739154)
+,p_plug_source_type=>'NATIVE_BREADCRUMB'
+,p_menu_template_id=>4072363345357175094
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(46691748519270606002)
+,p_button_sequence=>10
+,p_button_plug_id=>wwv_flow_imp.id(46691745677508605999)
+,p_button_name=>'CREATE'
+,p_button_action=>'REDIRECT_PAGE'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>4072362960822175091
+,p_button_is_hot=>'Y'
+,p_button_image_alt=>'Create'
+,p_button_position=>'RIGHT_OF_IR_SEARCH_BAR'
+,p_button_redirect_url=>'f?p=&APP_ID.:9:&APP_SESSION.::&DEBUG.:9::'
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(46691748836448606003)
+,p_name=>'Edit Report - Dialog Closed'
+,p_event_sequence=>10
+,p_triggering_element_type=>'REGION'
+,p_triggering_region_id=>wwv_flow_imp.id(46691745677508605999)
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'apexafterclosedialog'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(46691749348063606003)
+,p_event_id=>wwv_flow_imp.id(46691748836448606003)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(46691745677508605999)
+);
+end;
+/
 prompt --application/pages/page_00008
 begin
 wwv_flow_imp_page.create_page(
@@ -5354,7 +5501,7 @@ wwv_flow_imp_page.create_report_region(
 '       m.MISSION_TYPE,',
 '       p.nom as "Nom prestataire",',
 '       p.matricule as "Code prestataire",',
-'       r.nom as "Region",',
+'       r.nom as "Ville",',
 '       CASE ',
 unistr('           WHEN m.STATUS = 1 THEN ''Termin\00E9e'''),
 '           ELSE ''En cours''',
@@ -5421,11 +5568,11 @@ wwv_flow_imp_page.create_report_columns(
 ,p_include_in_export=>'Y'
 );
 wwv_flow_imp_page.create_report_columns(
- p_id=>wwv_flow_imp.id(45621935169764375512)
+ p_id=>wwv_flow_imp.id(47130246359038160613)
 ,p_query_column_id=>5
-,p_column_alias=>'Region'
-,p_column_display_sequence=>100
-,p_column_heading=>'Region'
+,p_column_alias=>'Ville'
+,p_column_display_sequence=>140
+,p_column_heading=>'Ville'
 ,p_heading_alignment=>'LEFT'
 ,p_disable_sort_column=>'N'
 ,p_derived_column=>'N'
@@ -5470,6 +5617,293 @@ wwv_flow_imp_page.create_page_item(
   'submit_when_enter_pressed', 'N',
   'subtype', 'TEXT',
   'trim_spaces', 'BOTH')).to_clob
+);
+end;
+/
+prompt --application/pages/page_00009
+begin
+wwv_flow_imp_page.create_page(
+ p_id=>9
+,p_name=>'Incident form'
+,p_alias=>'INCIDENT-FORM'
+,p_page_mode=>'MODAL'
+,p_step_title=>'Incident form'
+,p_autocomplete_on_off=>'OFF'
+,p_step_template=>1661186590416509825
+,p_page_template_options=>'#DEFAULT#:js-dialog-class-t-Drawer--pullOutEnd'
+,p_dialog_chained=>'N'
+,p_dialog_resizable=>'Y'
+,p_protection_level=>'C'
+,p_page_component_map=>'02'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(46691736879196605988)
+,p_plug_name=>'Incident form'
+,p_region_template_options=>'#DEFAULT#'
+,p_plug_template=>4501440665235496320
+,p_plug_display_sequence=>10
+,p_query_type=>'SQL'
+,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select INCIDENT_ID,',
+'       GRAVITE,',
+'       DESCRIPTION,',
+'       DATE_INCIDENT,',
+'      prestataire_id',
+'  from INCIDENT '))
+,p_is_editable=>true
+,p_edit_operations=>'i:u:d'
+,p_lost_update_check_type=>'VALUES'
+,p_plug_source_type=>'NATIVE_FORM'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(46691740705931605993)
+,p_plug_name=>'Buttons'
+,p_region_template_options=>'#DEFAULT#'
+,p_plug_template=>2126429139436695430
+,p_plug_display_sequence=>20
+,p_plug_display_point=>'REGION_POSITION_03'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'TEXT',
+  'show_line_breaks', 'Y')).to_clob
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(46691741142801605994)
+,p_button_sequence=>10
+,p_button_plug_id=>wwv_flow_imp.id(46691740705931605993)
+,p_button_name=>'CANCEL'
+,p_button_action=>'DEFINED_BY_DA'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>4072362960822175091
+,p_button_image_alt=>'Cancel'
+,p_button_position=>'CLOSE'
+,p_button_alignment=>'RIGHT'
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(46691742564396605996)
+,p_button_sequence=>20
+,p_button_plug_id=>wwv_flow_imp.id(46691740705931605993)
+,p_button_name=>'DELETE'
+,p_button_action=>'SUBMIT'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>4072362960822175091
+,p_button_image_alt=>'Delete'
+,p_button_position=>'DELETE'
+,p_button_alignment=>'RIGHT'
+,p_button_execute_validations=>'N'
+,p_confirm_message=>'&APP_TEXT$DELETE_MSG!RAW.'
+,p_confirm_style=>'danger'
+,p_button_condition=>':P9_INCIDENT_ID is not null and :P9_PRESTATAIRE_ID is not null'
+,p_button_condition2=>'SQL'
+,p_button_condition_type=>'EXPRESSION'
+,p_database_action=>'DELETE'
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(46691742982602605996)
+,p_button_sequence=>30
+,p_button_plug_id=>wwv_flow_imp.id(46691740705931605993)
+,p_button_name=>'SAVE'
+,p_button_action=>'SUBMIT'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>4072362960822175091
+,p_button_is_hot=>'Y'
+,p_button_image_alt=>'Apply Changes'
+,p_button_position=>'NEXT'
+,p_button_alignment=>'RIGHT'
+,p_button_condition=>':P9_INCIDENT_ID is not null and :P9_PRESTATAIRE_ID is not null'
+,p_button_condition2=>'SQL'
+,p_button_condition_type=>'EXPRESSION'
+,p_database_action=>'UPDATE'
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(46691743431085605996)
+,p_button_sequence=>40
+,p_button_plug_id=>wwv_flow_imp.id(46691740705931605993)
+,p_button_name=>'CREATE'
+,p_button_action=>'SUBMIT'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>4072362960822175091
+,p_button_is_hot=>'Y'
+,p_button_image_alt=>'Create'
+,p_button_position=>'NEXT'
+,p_button_alignment=>'RIGHT'
+,p_button_condition=>':P9_INCIDENT_ID is null or :P9_PRESTATAIRE_ID is null'
+,p_button_condition2=>'SQL'
+,p_button_condition_type=>'EXPRESSION'
+,p_database_action=>'INSERT'
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(45621936986998375530)
+,p_name=>'P9_PRESTATAIRE_ID'
+,p_source_data_type=>'NUMBER'
+,p_is_required=>true
+,p_item_sequence=>60
+,p_item_plug_id=>wwv_flow_imp.id(46691736879196605988)
+,p_item_source_plug_id=>wwv_flow_imp.id(46691736879196605988)
+,p_prompt=>'Prestataire Id'
+,p_source=>'PRESTATAIRE_ID'
+,p_source_type=>'REGION_SOURCE_COLUMN'
+,p_display_as=>'NATIVE_SELECT_LIST'
+,p_named_lov=>'PRESTATAIRE.NOM'
+,p_lov_display_null=>'YES'
+,p_cHeight=>1
+,p_field_template=>1609121967514267634
+,p_item_template_options=>'#DEFAULT#'
+,p_is_persistent=>'N'
+,p_lov_display_extra=>'YES'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(46691737250763605989)
+,p_name=>'P9_INCIDENT_ID'
+,p_source_data_type=>'NUMBER'
+,p_is_primary_key=>true
+,p_is_query_only=>true
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_imp.id(46691736879196605988)
+,p_item_source_plug_id=>wwv_flow_imp.id(46691736879196605988)
+,p_use_cache_before_default=>'NO'
+,p_prompt=>'Incident Id'
+,p_source=>'INCIDENT_ID'
+,p_source_type=>'REGION_SOURCE_COLUMN'
+,p_display_as=>'NATIVE_HIDDEN'
+,p_label_alignment=>'RIGHT'
+,p_field_template=>1609121967514267634
+,p_item_template_options=>'#DEFAULT#'
+,p_is_persistent=>'N'
+,p_protection_level=>'S'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'value_protected', 'Y')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(46691738000078605990)
+,p_name=>'P9_GRAVITE'
+,p_source_data_type=>'VARCHAR2'
+,p_item_sequence=>30
+,p_item_plug_id=>wwv_flow_imp.id(46691736879196605988)
+,p_item_source_plug_id=>wwv_flow_imp.id(46691736879196605988)
+,p_prompt=>'Gravite'
+,p_source=>'GRAVITE'
+,p_source_type=>'REGION_SOURCE_COLUMN'
+,p_display_as=>'NATIVE_RADIOGROUP'
+,p_lov=>unistr('STATIC:faible;faible,moyen;moyen,\00E9lev\00E9;\00E9lev\00E9')
+,p_lov_display_null=>'YES'
+,p_field_template=>1609121967514267634
+,p_item_template_options=>'#DEFAULT#'
+,p_is_persistent=>'N'
+,p_lov_display_extra=>'YES'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'number_of_columns', '1',
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(46691738418101605991)
+,p_name=>'P9_DESCRIPTION'
+,p_source_data_type=>'VARCHAR2'
+,p_item_sequence=>40
+,p_item_plug_id=>wwv_flow_imp.id(46691736879196605988)
+,p_item_source_plug_id=>wwv_flow_imp.id(46691736879196605988)
+,p_use_cache_before_default=>'NO'
+,p_prompt=>'Description'
+,p_source=>'DESCRIPTION'
+,p_source_type=>'REGION_SOURCE_COLUMN'
+,p_display_as=>'NATIVE_TEXTAREA'
+,p_cSize=>60
+,p_cMaxlength=>1000
+,p_cHeight=>4
+,p_label_alignment=>'RIGHT'
+,p_field_template=>1609121967514267634
+,p_item_template_options=>'#DEFAULT#'
+,p_is_persistent=>'N'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'auto_height', 'N',
+  'character_counter', 'N',
+  'resizable', 'Y',
+  'trim_spaces', 'BOTH')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(46691738855594605991)
+,p_name=>'P9_DATE_INCIDENT'
+,p_source_data_type=>'DATE'
+,p_item_sequence=>50
+,p_item_plug_id=>wwv_flow_imp.id(46691736879196605988)
+,p_item_source_plug_id=>wwv_flow_imp.id(46691736879196605988)
+,p_use_cache_before_default=>'NO'
+,p_prompt=>'Date Incident'
+,p_source=>'DATE_INCIDENT'
+,p_source_type=>'REGION_SOURCE_COLUMN'
+,p_display_as=>'NATIVE_DATE_PICKER_APEX'
+,p_cSize=>32
+,p_cMaxlength=>255
+,p_cHeight=>1
+,p_label_alignment=>'RIGHT'
+,p_field_template=>1609121967514267634
+,p_item_template_options=>'#DEFAULT#'
+,p_is_persistent=>'N'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'appearance_and_behavior', 'MONTH-PICKER:YEAR-PICKER:TODAY-BUTTON',
+  'days_outside_month', 'VISIBLE',
+  'display_as', 'POPUP',
+  'max_date', 'NONE',
+  'min_date', 'NONE',
+  'multiple_months', 'N',
+  'show_on', 'FOCUS',
+  'show_time', 'N',
+  'use_defaults', 'Y')).to_clob
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(46691741201782605994)
+,p_name=>'Cancel Dialog'
+,p_event_sequence=>10
+,p_triggering_element_type=>'BUTTON'
+,p_triggering_button_id=>wwv_flow_imp.id(46691741142801605994)
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'click'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(46691742069273605995)
+,p_event_id=>wwv_flow_imp.id(46691741201782605994)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_action=>'NATIVE_DIALOG_CANCEL'
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(46691744254768605997)
+,p_process_sequence=>10
+,p_process_point=>'AFTER_SUBMIT'
+,p_region_id=>wwv_flow_imp.id(46691736879196605988)
+,p_process_type=>'NATIVE_FORM_DML'
+,p_process_name=>'Process form Incident form'
+,p_attribute_01=>'REGION_SOURCE'
+,p_attribute_05=>'Y'
+,p_attribute_06=>'Y'
+,p_attribute_08=>'Y'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_internal_uid=>46691744254768605997
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(46691744645172605997)
+,p_process_sequence=>50
+,p_process_point=>'AFTER_SUBMIT'
+,p_process_type=>'NATIVE_CLOSE_WINDOW'
+,p_process_name=>'Close Dialog'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_process_when=>'CREATE,SAVE,DELETE'
+,p_process_when_type=>'REQUEST_IN_CONDITION'
+,p_internal_uid=>46691744645172605997
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(46691743836376605997)
+,p_process_sequence=>10
+,p_process_point=>'BEFORE_HEADER'
+,p_region_id=>wwv_flow_imp.id(46691736879196605988)
+,p_process_type=>'NATIVE_FORM_INIT'
+,p_process_name=>'Initialize form Incident form'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_internal_uid=>46691743836376605997
 );
 end;
 /
@@ -6194,23 +6628,29 @@ wwv_flow_imp_page.create_page_plug(
 ,p_include_in_reg_disp_sel_yn=>'Y'
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select FORFAIT_ID,',
-'       STATUS,',
-'       FRAUDE,',
-'       COUT_EXPERT,',
-'       DATE_PRISE_PHOTO,',
-'       DATE_VALIDATION_DEVIS,',
-'       DATE_PUB_DEVIS,',
-'       DATE_PUBLICATION_RAPPORT,',
-'       REGION_ID,',
-'       PESTATAIRE_MATRICULE,',
-'       DATE_MISSIONNEMENT,',
-'       DATE_CONFIRMATION_RDV,',
-'       PRESTATAIRE_ID',
-'  from FORFAIT',
-' Where PRESTATAIRE_ID=:P14_PRESTATAIRE_ID',
-' and  ( :P14_STARTDATE IS NULL OR DATE_PRISE_PHOTO >= :P14_STARTDATE )',
-'  AND ( :P14_ENDDATE IS NULL   OR DATE_PRISE_PHOTO <= :P14_ENDDATE )'))
+'select f.FORFAIT_ID,',
+'         CASE ',
+'         WHEN f.FRAUDE = 1 THEN ''OUI''',
+'         ELSE ''Non''',
+'        END AS FRAUDE, ',
+'        CASE ',
+unistr('         WHEN f.STATUS = 1 THEN ''Termin\00E9e'''),
+'         ELSE ''En cours''',
+'        END AS statut,  ',
+'       f.COUT_EXPERT,',
+'       f.DATE_PRISE_PHOTO,',
+'       f.DATE_VALIDATION_DEVIS,',
+'       f.DATE_PUB_DEVIS,',
+'       f.DATE_PUBLICATION_RAPPORT,',
+'       r.nom as ville,',
+'       p.Matricule as PESTATAIRE_code,',
+'       f.DATE_MISSIONNEMENT,',
+'       f.DATE_CONFIRMATION_RDV',
+'from FORFAIT f left join REGION r on f.REGION_ID=r.REGION_ID',
+'left join prestataire p on P.PRESTATAIRE_ID =P.PRESTATAIRE_ID',
+'Where p.PRESTATAIRE_ID=:P14_PRESTATAIRE_ID',
+'and  ( :P14_STARTDATE IS NULL OR DATE_PRISE_PHOTO >= :P14_STARTDATE )',
+'AND ( :P14_ENDDATE IS NULL   OR DATE_PRISE_PHOTO <= :P14_ENDDATE )'))
 ,p_plug_source_type=>'NATIVE_IR'
 ,p_prn_content_disposition=>'ATTACHMENT'
 ,p_prn_units=>'INCHES'
@@ -6267,28 +6707,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(61882124192129581926)
-,p_db_column_name=>'STATUS'
-,p_display_order=>20
-,p_column_identifier=>'B'
-,p_column_label=>'Status'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(61882124228353581927)
-,p_db_column_name=>'FRAUDE'
-,p_display_order=>30
-,p_column_identifier=>'C'
-,p_column_label=>'Fraude'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(61882124352953581928)
 ,p_db_column_name=>'COUT_EXPERT'
 ,p_display_order=>40
@@ -6322,27 +6740,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(61882124723172581931)
-,p_db_column_name=>'REGION_ID'
-,p_display_order=>70
-,p_column_identifier=>'G'
-,p_column_label=>'Region Id'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(61882124788629581932)
-,p_db_column_name=>'PESTATAIRE_MATRICULE'
-,p_display_order=>80
-,p_column_identifier=>'H'
-,p_column_label=>'Pestataire Matricule'
-,p_column_type=>'STRING'
-,p_heading_alignment=>'LEFT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(61882124839355581933)
 ,p_db_column_name=>'DATE_MISSIONNEMENT'
 ,p_display_order=>90
@@ -6362,17 +6759,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_column_type=>'DATE'
 ,p_heading_alignment=>'LEFT'
 ,p_tz_dependent=>'N'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(61882125203726581936)
-,p_db_column_name=>'PRESTATAIRE_ID'
-,p_display_order=>120
-,p_column_identifier=>'L'
-,p_column_label=>'Prestataire Id'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
@@ -6397,6 +6783,46 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_tz_dependent=>'N'
 ,p_use_as_row_header=>'N'
 );
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621937808378375539)
+,p_db_column_name=>'PESTATAIRE_CODE'
+,p_display_order=>160
+,p_column_identifier=>'R'
+,p_column_label=>'Pestataire Code'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621937997517375540)
+,p_db_column_name=>'VILLE'
+,p_display_order=>170
+,p_column_identifier=>'S'
+,p_column_label=>'Ville'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621938812372375549)
+,p_db_column_name=>'FRAUDE'
+,p_display_order=>180
+,p_column_identifier=>'T'
+,p_column_label=>'Fraude'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621938900099375550)
+,p_db_column_name=>'STATUT'
+,p_display_order=>190
+,p_column_identifier=>'U'
+,p_column_label=>'Statut'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
 wwv_flow_imp_page.create_worksheet_rpt(
  p_id=>wwv_flow_imp.id(61907986590450150779)
 ,p_application_user=>'APXWS_DEFAULT'
@@ -6404,7 +6830,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_report_alias=>'306718002'
 ,p_status=>'PUBLIC'
 ,p_is_default=>'Y'
-,p_report_columns=>'FORFAIT_ID:STATUS:FRAUDE:COUT_EXPERT:DATE_PRISE_PHOTO:DATE_PUBLICATION_RAPPORT:REGION_ID:PESTATAIRE_MATRICULE:DATE_MISSIONNEMENT:DATE_CONFIRMATION_RDV:PRESTATAIRE_ID'
+,p_report_columns=>'FORFAIT_ID:COUT_EXPERT:DATE_PRISE_PHOTO:DATE_PUBLICATION_RAPPORT:DATE_MISSIONNEMENT:DATE_CONFIRMATION_RDV'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(58493514441222928639)
@@ -6416,21 +6842,27 @@ wwv_flow_imp_page.create_page_plug(
 ,p_include_in_reg_disp_sel_yn=>'Y'
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select GA_ID,',
-'       STATUS,',
-'       FRAUDE,',
-'       COUT_EXPERT,',
-'       DATE_PRISE_PHOTO,',
-'       DATE_PUBLICATION_RAPPORT,',
-'       REGION_ID,',
-'       MATRICULE,',
-'       DATE_PUB_FACTURE,',
-'       DATE_VALIDATION_DEVIS,',
-'       DATE_PUB_DEVIS,',
-'       DATE_IMMOBILISATION,',
-'       PRESTATAIRE_ID',
-'  from GA',
-' Where PRESTATAIRE_ID=:P14_PRESTATAIRE_ID'))
+'select g.GA_ID,',
+'         CASE ',
+'         WHEN g.FRAUDE = 1 THEN ''OUI''',
+'         ELSE ''Non''',
+'    END AS FRAUDE, ',
+'    CASE ',
+unistr('         WHEN g.STATUS = 1 THEN ''Termin\00E9e'''),
+'         ELSE ''En cours''',
+'    END AS statut,  ',
+'        g.COUT_EXPERT,',
+'       g.DATE_PRISE_PHOTO,',
+'       g.DATE_PUBLICATION_RAPPORT,',
+'       g.DATE_PUB_FACTURE,',
+'       g.DATE_VALIDATION_DEVIS,',
+'       g.DATE_PUB_DEVIS,',
+'       g.DATE_IMMOBILISATION,',
+'       r.nom as ville,',
+'       p.Matricule as PESTATAIRE_code  ',
+' from GA g left join REGION r on g.REGION_ID=r.REGION_ID',
+'left join prestataire p on P.PRESTATAIRE_ID =P.PRESTATAIRE_ID',
+' Where p.PRESTATAIRE_ID=:P14_PRESTATAIRE_ID'))
 ,p_plug_source_type=>'NATIVE_IR'
 ,p_prn_content_disposition=>'ATTACHMENT'
 ,p_prn_units=>'INCHES'
@@ -6488,28 +6920,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(58493514773944928642)
-,p_db_column_name=>'STATUS'
-,p_display_order=>20
-,p_column_identifier=>'B'
-,p_column_label=>'Status'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(58493514916722928643)
-,p_db_column_name=>'FRAUDE'
-,p_display_order=>30
-,p_column_identifier=>'C'
-,p_column_label=>'Fraude'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(58493514997221928644)
 ,p_db_column_name=>'COUT_EXPERT'
 ,p_display_order=>40
@@ -6540,27 +6950,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_column_type=>'DATE'
 ,p_heading_alignment=>'LEFT'
 ,p_tz_dependent=>'N'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(58493515294509928647)
-,p_db_column_name=>'REGION_ID'
-,p_display_order=>70
-,p_column_identifier=>'G'
-,p_column_label=>'Region Id'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(58493515370344928648)
-,p_db_column_name=>'MATRICULE'
-,p_display_order=>80
-,p_column_identifier=>'H'
-,p_column_label=>'Matricule'
-,p_column_type=>'STRING'
-,p_heading_alignment=>'LEFT'
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
@@ -6597,17 +6986,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(58493515932642928654)
-,p_db_column_name=>'PRESTATAIRE_ID'
-,p_display_order=>140
-,p_column_identifier=>'N'
-,p_column_label=>'Prestataire Id'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(36168319970764683646)
 ,p_db_column_name=>'DATE_PUB_DEVIS'
 ,p_display_order=>150
@@ -6618,6 +6996,46 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_tz_dependent=>'N'
 ,p_use_as_row_header=>'N'
 );
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621938029262375541)
+,p_db_column_name=>'VILLE'
+,p_display_order=>160
+,p_column_identifier=>'R'
+,p_column_label=>'Ville'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621938197949375542)
+,p_db_column_name=>'PESTATAIRE_CODE'
+,p_display_order=>170
+,p_column_identifier=>'S'
+,p_column_label=>'Pestataire Code'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621938660269375547)
+,p_db_column_name=>'FRAUDE'
+,p_display_order=>180
+,p_column_identifier=>'T'
+,p_column_label=>'Fraude'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621938739104375548)
+,p_db_column_name=>'STATUT'
+,p_display_order=>190
+,p_column_identifier=>'U'
+,p_column_label=>'Statut'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
 wwv_flow_imp_page.create_worksheet_rpt(
  p_id=>wwv_flow_imp.id(61027747853633366764)
 ,p_application_user=>'APXWS_DEFAULT'
@@ -6625,7 +7043,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_report_alias=>'297915615'
 ,p_status=>'PUBLIC'
 ,p_is_default=>'Y'
-,p_report_columns=>'GA_ID:STATUS:FRAUDE:COUT_EXPERT:DATE_PRISE_PHOTO:DATE_PUBLICATION_RAPPORT:REGION_ID:MATRICULE:DATE_PUB_FACTURE:DATE_VALIDATION_DEVIS:DATE_IMMOBILISATION:PRESTATAIRE_ID'
+,p_report_columns=>'GA_ID:COUT_EXPERT:DATE_PRISE_PHOTO:DATE_PUBLICATION_RAPPORT:DATE_PUB_FACTURE:DATE_VALIDATION_DEVIS:DATE_IMMOBILISATION'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(58493516307160928657)
@@ -6637,22 +7055,28 @@ wwv_flow_imp_page.create_page_plug(
 ,p_include_in_reg_disp_sel_yn=>'Y'
 ,p_query_type=>'SQL'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select PN_ID,',
-'       STATUS,',
-'       FRAUDE,',
-'       COUT_EXPERT,',
-'       DATE_PRISE_PHOTO,',
-'       DATE_PUBLICATION_RAPPORT,',
-'       REGION_ID,',
-'       MATRICULE,',
-'       DATE_MISSIONNEMENT,',
-'       DATE_CONFIRMATIONRDV,',
-'       DATE_VALIDATION_DEVIS,',
-'       DATE_PUB_DEVIS,',
-'       PALIER_ID,',
-'       PRESTATAIRE_ID',
-'  from PN',
-' Where PRESTATAIRE_ID=:P14_PRESTATAIRE_ID',
+'select pn.PN_ID,',
+'         CASE ',
+'         WHEN pn.FRAUDE = 1 THEN ''OUI''',
+'         ELSE ''Non''',
+'            END AS FRAUDE, ',
+'         CASE ',
+unistr('         WHEN pn.STATUS = 1 THEN ''Termin\00E9e'''),
+'         ELSE ''En cours''',
+'            END AS statut,  ',
+'       pn.COUT_EXPERT,',
+'       pn.DATE_PRISE_PHOTO,',
+'       pn.DATE_PUBLICATION_RAPPORT,',
+'       r.nom as ville,',
+'       p.Matricule as PESTATAIRE_code,',
+'       pn.DATE_MISSIONNEMENT,',
+'       pn.DATE_CONFIRMATIONRDV,',
+'       pn.DATE_VALIDATION_DEVIS,',
+'       pn.DATE_PUB_DEVIS,',
+'       pn.PALIER_ID',
+'  from PN pn left join REGION r on pn.REGION_ID=r.REGION_ID',
+'left join prestataire p on P.PRESTATAIRE_ID =P.PRESTATAIRE_ID',
+' Where p.PRESTATAIRE_ID=:P14_PRESTATAIRE_ID',
 ' and  ( :P14_STARTDATE IS NULL OR DATE_PRISE_PHOTO >= :P14_STARTDATE )',
 '  AND ( :P14_ENDDATE IS NULL   OR DATE_PRISE_PHOTO <= :P14_ENDDATE )'))
 ,p_plug_source_type=>'NATIVE_IR'
@@ -6712,28 +7136,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(58493516606326928660)
-,p_db_column_name=>'STATUS'
-,p_display_order=>20
-,p_column_identifier=>'B'
-,p_column_label=>'Status'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(58493516723656928661)
-,p_db_column_name=>'FRAUDE'
-,p_display_order=>30
-,p_column_identifier=>'C'
-,p_column_label=>'Fraude'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(58493516823556928662)
 ,p_db_column_name=>'COUT_EXPERT'
 ,p_display_order=>40
@@ -6764,27 +7166,6 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_column_type=>'DATE'
 ,p_heading_alignment=>'LEFT'
 ,p_tz_dependent=>'N'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(58493517037086928665)
-,p_db_column_name=>'REGION_ID'
-,p_display_order=>70
-,p_column_identifier=>'G'
-,p_column_label=>'Region Id'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(58493517167456928666)
-,p_db_column_name=>'MATRICULE'
-,p_display_order=>80
-,p_column_identifier=>'H'
-,p_column_label=>'Matricule'
-,p_column_type=>'STRING'
-,p_heading_alignment=>'LEFT'
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
@@ -6843,14 +7224,43 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(61417437205661565823)
-,p_db_column_name=>'PRESTATAIRE_ID'
+ p_id=>wwv_flow_imp.id(45621938271855375543)
+,p_db_column_name=>'VILLE'
+,p_display_order=>140
+,p_column_identifier=>'P'
+,p_column_label=>'Ville'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621938397608375544)
+,p_db_column_name=>'PESTATAIRE_CODE'
 ,p_display_order=>150
-,p_column_identifier=>'O'
-,p_column_label=>'Prestataire Id'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
+,p_column_identifier=>'Q'
+,p_column_label=>'Pestataire Code'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621938481621375545)
+,p_db_column_name=>'FRAUDE'
+,p_display_order=>160
+,p_column_identifier=>'R'
+,p_column_label=>'Fraude'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
+);
+wwv_flow_imp_page.create_worksheet_column(
+ p_id=>wwv_flow_imp.id(45621938552740375546)
+,p_db_column_name=>'STATUT'
+,p_display_order=>170
+,p_column_identifier=>'S'
+,p_column_label=>'Statut'
+,p_column_type=>'STRING'
+,p_heading_alignment=>'LEFT'
 ,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_rpt(
@@ -6860,7 +7270,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_report_alias=>'301819283'
 ,p_status=>'PUBLIC'
 ,p_is_default=>'Y'
-,p_report_columns=>'PN_ID:STATUS:FRAUDE:COUT_EXPERT:DATE_PRISE_PHOTO:DATE_PUBLICATION_RAPPORT:REGION_ID:MATRICULE:DATE_MISSIONNEMENT:DATE_CONFIRMATIONRDV:DATE_VALIDATION_DEVIS:DATE_PUB_DEVIS:PALIER_ID:PRESTATAIRE_ID'
+,p_report_columns=>'PN_ID:COUT_EXPERT:DATE_PRISE_PHOTO:DATE_PUBLICATION_RAPPORT:DATE_MISSIONNEMENT:DATE_CONFIRMATIONRDV:DATE_VALIDATION_DEVIS:DATE_PUB_DEVIS:PALIER_ID'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(60410596142367362392)
@@ -8744,10 +9154,12 @@ wwv_flow_imp_page.create_report_region(
 ,p_query_options=>'DERIVED_REPORT_COLUMNS'
 ,p_query_no_data_found=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '<p>',
-'This page visualizes large US airports as ',
-' a <em>Point Layer</em>. Each airport is visualized with a <em>Map Marker</em>. Clicking the map marker reveals detailed information about the airport. Red markers are used for large airports.',
-'<p>Use the <em>Circle</em> tool <span aria-hidden="true" class="a-Icon icon-draw-circle"></span> to additionally find and visualize small airports. Once the circle is drawn, the application will reveal the small airports within the circle''s circumfer'
-||'ence and update the report results.',
+unistr('Cette page visualise les r\00E9gions  en tant que <em>Couche de Points</em>. Chaque r\00E9gion est repr\00E9sent\00E9e par un <em>Marqueur de Carte</em>. Cliquer sur un marqueur affiche des informations d\00E9taill\00E9es sur la r\00E9gion. Les marqueurs rouges sont utilis\00E9s po')
+||unistr('ur les r\00E9gions.'),
+'</p>',
+'<p>',
+unistr('Utilisez l''outil <em>Cercle</em> <span aria-hidden="true" class="a-Icon icon-draw-circle"></span> pour trouver et visualiser les prestataires. Une fois le cercle dessin\00E9, l''application affichera les prestataires \00E0 l''int\00E9rieur de la circonf\00E9rence du c')
+||unistr('ercle et mettra \00E0 jour les r\00E9sultats du rapport.'),
 '</p>'))
 ,p_query_num_rows_type=>'NEXT_PREVIOUS_LINKS'
 ,p_pagination_display_position=>'BOTTOM_RIGHT'
@@ -9201,6 +9613,7 @@ wwv_flow_imp_page.create_map_region_layer(
  p_id=>wwv_flow_imp.id(61975312839389164198)
 ,p_map_region_id=>wwv_flow_imp.id(61975311696677164197)
 ,p_name=>'Large Airports'
+,p_label=>'REGIONS'
 ,p_layer_type=>'POINT'
 ,p_display_sequence=>10
 ,p_location=>'LOCAL'
@@ -9289,6 +9702,7 @@ wwv_flow_imp_page.create_map_region_layer(
  p_id=>wwv_flow_imp.id(61975312261229164198)
 ,p_map_region_id=>wwv_flow_imp.id(61975311696677164197)
 ,p_name=>'Small Airports'
+,p_label=>'PRESTATAIRES'
 ,p_layer_type=>'POINT'
 ,p_display_sequence=>30
 ,p_location=>'LOCAL'
